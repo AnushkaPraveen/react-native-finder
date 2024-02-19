@@ -5,9 +5,29 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback } from 'react';
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 import LoginScreen from './app/screen/LoginScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import TabNavigation from './app/navigation/TabNavigation';
 
 SplashScreen.preventAutoHideAsync();
+
+const tokenCache = {
+  async getToken(key) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch (err) {
+      return null;
+    }
+  },
+  async saveToken(key, value) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (err) {
+      return;
+    }
+  },
+};
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -28,9 +48,17 @@ export default function App() {
   }
   
   return (
-    <ClerkProvider publishableKey={'pk_test_YXJ0aXN0aWMtY2ljYWRhLTc3LmNsZXJrLmFjY291bnRzLmRldiQ'}>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={'pk_test_YXJ0aXN0aWMtY2ljYWRhLTc3LmNsZXJrLmFjY291bnRzLmRldiQ'}>
     <View style={styles.container} onLayout={onLayoutRootView}>
-      <LoginScreen/>
+    <SignedIn>
+          <NavigationContainer>
+            <TabNavigation/>
+          </NavigationContainer>
+        </SignedIn>
+        <SignedOut>
+        <LoginScreen/>
+        </SignedOut>
+      
       <StatusBar style="auto" />
     </View>
     </ClerkProvider>
